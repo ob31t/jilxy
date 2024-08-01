@@ -66,6 +66,7 @@ def dig_lower_block():
 def mine():
     dig_upper_block()
     dig_lower_block()
+    go_forw_one_block()
     
 
     

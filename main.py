@@ -1,6 +1,9 @@
 from javascript import require, On, Once, AsyncTask, once, off
 import settings as st
 
+# модуль для быстрого создания вектора - v(x,y,z)
+v = require('vec3')
+
 # подгрузка mineflayer и его компонентов 
 mineflayer = require('mineflayer')
 inventoryViewer = require('mineflayer-web-inventory')

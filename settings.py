@@ -9,3 +9,4 @@ num_of_blocks = 10
 
 yaw_radians = 3.141592653589793
 pitch_radians = -0.5235987755982988
+simple_bridge_pitch = -1

@@ -22,25 +22,38 @@ block_diam = Block.fromString("diamond_block", 14)
 
 # функция, которая проверяет в радиусе maxDistance наличие блоков, id которых заданно в options_for_digging['matching'] и вскапывает их
 # debug для записи в консоль инфы, можно убрать
-def check_and_dig(debug=False):
+def check_and_dig(marker=0):
+    place_leg_block = False
     options = {'matching': st.options_for_digging['matching'], 
-               'point': bot.entity.position.offset(0, 1, 0),
+               'point': bot.entity.position,
                'count': st.options_for_digging['count'], 
                'maxDistance': st.options_for_digging['maxDistance']}
     
     # функция findBlock на выходе дает массив координат
     treasure = bot.findBlocks(options)
-    i = 0
     # поэтому превращаем массив координат в массив блоков
+    to_dig = []
     for item in treasure:
-        treasure[i] = bot.blockAt(item)
-        if debug == True:
-            print(treasure[i].displayName)
-            print(treasure[i].position)
-        i += 1
+        if bot.entity.position.y > item.y:
+            if marker == 1:
+                continue
+            place_leg_block = True
+            print(item)
+            bot.chat('found!')
+        elif bot.entity.position.z < item.z:
+            continue
+        print(item)
+        to_dig.append(bot.blockAt(item))
     # затем вскапываем
-    for block in treasure:
+    for block in to_dig:
         bot.dig(block)
+    if place_leg_block == True:
+        bot.equip(27, 'hand')
+        bot.look(st.yaw_radians, st.simple_bridge_pitch)
+        block_hole = bot.blockAtCursor()
+        bot.placeBlock(block_hole, v(0,0,-1))
+        bot.equip(841, 'hand')
+        
 
 # приветствие
 def greetings():
@@ -57,13 +70,13 @@ def dig_upper_block():
     bot.look(st.yaw_radians, 0)
     block_forw = bot.blockAtCursor()
     bot.dig(block_forw)
-    check_and_dig()
+    check_and_dig(marker=1)
 
 def dig_lower_block():
     bot.look(st.yaw_radians, st.pitch_radians)
     block_forw = bot.blockAtCursor()
-    bot.dig(block_forw) 
-    check_and_dig()
+    bot.dig(block_forw)
+    check_and_dig(marker=0)
 
 # алгоритм копания
 def mine():
@@ -82,7 +95,8 @@ def handle(*args):
     @On(bot, 'chat')
     def handleMsg(this, sender, message, *args):
         if sender != st.BOT_USERNAME and message == 'dig':
-            print('Got message to dig from', sender)  
+            print('Got message to dig from', sender)
+            bot.equip(841, 'hand')  
             temp = 0
             # back_to = bot.entity.position - забацать позицию, чтоб к ней вернутся (СДЕЛАТЬ ПОЗЖЕ)
             while True:
@@ -95,6 +109,7 @@ def handle(*args):
             inventoryViewer(bot)
         elif sender != st.BOT_USERNAME and message == 'close pocket':
             bot.webInventory.stop()
+        
         
             
 # для проверки в случае ошибок

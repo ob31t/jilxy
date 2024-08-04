@@ -38,11 +38,8 @@ def check_and_dig(marker=0):
             if marker == 1:
                 continue
             place_leg_block = True
-            print(item)
-            bot.chat('found!')
         elif bot.entity.position.z < item.z:
             continue
-        print(item)
         to_dig.append(bot.blockAt(item))
     # затем вскапываем
     for block in to_dig:
@@ -54,7 +51,8 @@ def check_and_dig(marker=0):
         bot.placeBlock(block_hole, v(0,0,-1))
         bot.equip(841, 'hand')
         
-
+def den_bossik():
+    ...
 # приветствие
 def greetings():
     bot.chat('Привет, меня зовут Шахтерин, я был создан ради добычи полезных ископаемых!')

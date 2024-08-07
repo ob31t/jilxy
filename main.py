@@ -76,8 +76,6 @@ def check_and_dig(marker=0):
         bot.placeBlock(block_hole, v(0,0,-1))
         bot.equip(841, 'hand')
         
-def den_bossik():
-    ...
 # приветствие
 def greetings():
     bot.chat('Привет, меня зовут Шахтерин, я был создан ради добычи полезных ископаемых!')

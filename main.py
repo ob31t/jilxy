@@ -1,3 +1,4 @@
+from time import sleep
 from javascript import require, On, Once, AsyncTask, once, off
 import settings as st
 
@@ -9,6 +10,7 @@ mineflayer = require('mineflayer')
 inventoryViewer = require('mineflayer-web-inventory')
 pathfinder = require('mineflayer-pathfinder').pathfinder
 Movements = require('mineflayer-pathfinder').Movements
+Goals = require('mineflayer-pathfinder').goals
 
 # создание бота, его заход на сервер, настройки в settings.py
 bot = mineflayer.createBot(st.options_for_bot)
@@ -22,6 +24,28 @@ block_diam = Block.fromString("diamond_block", 14)
 
 # функция, которая проверяет в радиусе maxDistance наличие блоков, id которых заданно в options_for_digging['matching'] и вскапывает их
 # debug для записи в консоль инфы, можно убрать
+
+def remember():
+    bot.look(0, st.pitch_radians)
+    return bot.blockAtCursor() 
+
+def return_and_put(block):
+    best_goal = Goals.GoalGetToBlock(block.position.x, block.position.y, block.position.z)
+    defaultMove = Movements(bot)
+    bot.pathfinder.setMovements(defaultMove)
+    bot.pathfinder.setGoal(best_goal)
+    bot.pathfinder.goto(best_goal)
+    bot.look(0, st.pitch_radians)
+    window = bot.openContainer(bot.blockAtCursor())
+    inventory = window.items()
+    for item in inventory:
+        if item.type == 841:
+            continue
+        window.deposit(item.type, None, item.count)
+    bot.closeWindow(window)
+    bot.chat('Я закончил копать!')
+    
+
 def check_and_dig(marker=0):
     place_leg_block = False
     options = {'matching': st.options_for_digging['matching'], 
@@ -38,15 +62,13 @@ def check_and_dig(marker=0):
             if marker == 1:
                 continue
             place_leg_block = True
-            print(item)
-            bot.chat('found!')
         elif bot.entity.position.z < item.z:
             continue
-        print(item)
         to_dig.append(bot.blockAt(item))
     # затем вскапываем
     for block in to_dig:
-        bot.dig(block)
+        if bot.canSeeBlock(block):
+            bot.dig(block)
     if place_leg_block == True:
         bot.equip(27, 'hand')
         bot.look(st.yaw_radians, st.simple_bridge_pitch)
@@ -63,7 +85,7 @@ def greetings():
 # ходьба через состояния...
 def go_forw_one_block():
     bot.setControlState('forward', True)
-    bot.waitForTicks(10)
+    bot.waitForTicks(5)
     bot.clearControlStates()
 
 def dig_upper_block():
@@ -84,8 +106,6 @@ def mine():
     dig_lower_block()
     go_forw_one_block()
     
-
-    
 # что происходит, когда бот спавнится
 @On(bot, 'spawn')
 def handle(*args):
@@ -95,21 +115,38 @@ def handle(*args):
     @On(bot, 'chat')
     def handleMsg(this, sender, message, *args):
         if sender != st.BOT_USERNAME and message == 'dig':
-            print('Got message to dig from', sender)
-            bot.equip(841, 'hand')  
+            chest = remember()
+            bot.equip(841, 'hand')
             temp = 0
             # back_to = bot.entity.position - забацать позицию, чтоб к ней вернутся (СДЕЛАТЬ ПОЗЖЕ)
             while True:
                 mine()
                 temp += 1
                 if temp == st.num_of_blocks:
-                    break    
+                    break
+            return_and_put(chest)
         # web inventory viewer 
         elif sender != st.BOT_USERNAME and message == 'open pocket':
             inventoryViewer(bot)
         elif sender != st.BOT_USERNAME and message == 'close pocket':
             bot.webInventory.stop()
-        
+        elif sender != st.BOT_USERNAME and message == 'drochi':
+            bot.look(0, st.pitch_radians)
+            while True:
+                window = bot.openBlock(bot.blockAtCursor())
+                bot.closeWindow(window)
+        elif sender != st.BOT_USERNAME and message == 'nude':
+            bot.look(0, st.pitch_radians)
+            window = bot.openContainer(bot.blockAtCursor())
+            inventory = window.items()
+            print(inventory)
+            for item in inventory:
+                window.deposit(item.type, None, item.count)
+            bot.closeWindow(window)
+        elif sender != st.BOT_USERNAME and message == 'watch':
+            block = bot.blockAtCursor()
+            print(block)
+
         
             
 # для проверки в случае ошибок

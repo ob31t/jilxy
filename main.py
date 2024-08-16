@@ -25,6 +25,16 @@ block_diam = Block.fromString("diamond_block", 14)
 # функция, которая проверяет в радиусе maxDistance наличие блоков, id которых заданно в options_for_digging['matching'] и вскапывает их
 # debug для записи в консоль инфы, можно убрать
 
+def place_torch():
+    bot.equip(290, 'hand')
+    bot.look(st.yaw_radians, -1.5)
+    torch_place = bot.blockAtCursor()
+    try:
+        bot.placeBlock(torch_place, v(0,1,0))
+        bot.equip(841, 'hand')
+    except:
+        bot.equip(841, 'hand')
+
 def remember():
     bot.look(0, st.pitch_radians)
     return bot.blockAtCursor() 
@@ -39,7 +49,7 @@ def return_and_put(block):
     window = bot.openContainer(bot.blockAtCursor())
     inventory = window.items()
     for item in inventory:
-        if item.type == 841:
+        if item.type == 841 or item.type == 27 or item.type == 290:
             continue
         window.deposit(item.type, None, item.count)
     bot.closeWindow(window)
@@ -49,7 +59,7 @@ def return_and_put(block):
 def check_and_dig(marker=0):
     place_leg_block = False
     options = {'matching': st.options_for_digging['matching'], 
-               'point': bot.entity.position,
+               'point': bot.entity.position.offset(0,-1,0),
                'count': st.options_for_digging['count'], 
                'maxDistance': st.options_for_digging['maxDistance']}
     
@@ -61,13 +71,18 @@ def check_and_dig(marker=0):
         if bot.entity.position.y > item.y:
             if marker == 1:
                 continue
-            place_leg_block = True
+            elif bot.entity.position.floored().x == item.x:
+                if bot.entity.position.rounded().z == item.z:
+                    place_leg_block = True
         elif bot.entity.position.z < item.z:
-            continue
+            if bot.entity.position.floored().x == item.x:
+                continue
         to_dig.append(bot.blockAt(item))
     # затем вскапываем
     for block in to_dig:
         if bot.canSeeBlock(block):
+            bot.dig(block)
+        elif abs(block.position.x - bot.entity.position.floored().x) == 1:
             bot.dig(block)
     if place_leg_block == True:
         bot.equip(27, 'hand')
@@ -83,6 +98,7 @@ def greetings():
 
 # ходьба через состояния...
 def go_forw_one_block():
+    bot.look(st.yaw_radians, 0)
     bot.setControlState('forward', True)
     bot.waitForTicks(5)
     bot.clearControlStates()
@@ -117,12 +133,13 @@ def handle(*args):
             chest = remember()
             bot.equip(841, 'hand')
             temp = 0
-            # back_to = bot.entity.position - забацать позицию, чтоб к ней вернутся (СДЕЛАТЬ ПОЗЖЕ)
             while True:
                 mine()
                 temp += 1
                 if temp == st.num_of_blocks:
                     break
+                if temp % 10 == 0:
+                    place_torch()
             return_and_put(chest)
         # web inventory viewer 
         elif sender != st.BOT_USERNAME and message == 'open pocket':

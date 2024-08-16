@@ -131,7 +131,7 @@ def handle(*args):
     def handleMsg(this, sender, message, *args):
         if sender != st.BOT_USERNAME and message == 'dig':
             chest = remember()
-            bot.equip(841, 'hand')
+            place_torch()
             temp = 0
             while True:
                 mine()
@@ -155,7 +155,6 @@ def handle(*args):
             bot.look(0, st.pitch_radians)
             window = bot.openContainer(bot.blockAtCursor())
             inventory = window.items()
-            print(inventory)
             for item in inventory:
                 window.deposit(item.type, None, item.count)
             bot.closeWindow(window)
